@@ -1,3 +1,4 @@
+var tool;
 let toolType = class {
   constructor () {
   }
