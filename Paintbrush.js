@@ -1,9 +1,8 @@
-let toolName = "Paintbrush";
 let toolType = class {
   constructor() {
   }
 }
-{
-  name: toolName,
+var tool = {
+  name: "Paintbruh",
   type: toolType
 }
