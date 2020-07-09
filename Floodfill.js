@@ -9,7 +9,7 @@ tool = {
       this.update = update;
     }
     setup () {
-      this.scene.onKeyboardObservable.add((kbInfo) => {
+      this.keyboardObservable = this.scene.onKeyboardObservable.add((kbInfo) => {
         if (kbInfo.event.key === 'f') {
           const ctx = this.canvas2D.getContext('2d');
           ctx.fillStyle = 'pink';
@@ -19,6 +19,9 @@ tool = {
       });
     }
     cleanup () {
+      if (this.keyboardObservable) {
+        this.scene.onKeyboardObservable.remove(this.keyboardObservable);
+      }
     }
   }
 }
