@@ -1,8 +1,12 @@
 let toolType = class {
-  constructor() {
+  constructor () {
+  }
+  setup () {
+  }
+  takedown() {
   }
 }
-var tool = {
-  name: "Paintbruh",
+tool = {
+  name: "Paintbrush",
   type: toolType
 }
