@@ -12,11 +12,8 @@ tool = {
       this.keyboardObservable = this.scene.onKeyboardObservable.add((kbInfo) => {
         if (kbInfo.event.key === 'f') {
           const ctx = this.canvas2D.getContext('2d');
-          ctx.fillStyle = Math.floor(Math.random()*16777215).toString(16);
+          ctx.fillStyle = '#' + Math.floor(Math.random()*16777215).toString(16);
           ctx.fillRect(0,0, this.size.width, this.size.height);
-          console.log(ctx.fillStyle);
-          console.log(Math.random());
-          console.log(Math.random());
           this.update();
         }
       });
