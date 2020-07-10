@@ -25,6 +25,7 @@ tool = {
             }
             break;
           case 0x04: // MOUSEMOVE
+            console.log(this.isPainting);
             if (this.isPainting) {
               if (pointerInfo.pickInfo.hit) {
                 const ctx = this.canvas2D.getContext('2d');
@@ -36,6 +37,7 @@ tool = {
                 this.update();
               }
             }
+            break;
         }
       });
     }
