@@ -11,6 +11,7 @@ tool = {
     setup () {
       this.isPainting = false;
       this.pointerObservable = this.scene.onPointerObservable.add((pointerInfo) => {
+        console.log(pointerInfo);
         switch (pointerInfo.type) {
           case 0x01: // MOUSEDOWN
             if (pointerInfo.event.button == 0) {
