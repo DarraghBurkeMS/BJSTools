@@ -15,6 +15,8 @@ tool = {
           ctx.fillStyle = Math.floor(Math.random()*16777215).toString(16);
           ctx.fillRect(0,0, this.size.width, this.size.height);
           console.log(ctx.fillStyle);
+          console.log(Math.random());
+          console.log(Math.random());
           this.update();
         }
       });
