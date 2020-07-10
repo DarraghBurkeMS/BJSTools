@@ -11,7 +11,6 @@ tool = {
     setup () {
       this.isPainting = false;
       this.pointerObservable = this.scene.onPointerObservable.add((pointerInfo) => {
-        console.log(pointerInfo);
         switch (pointerInfo.type) {
           case 0x01: // MOUSEDOWN
             if (pointerInfo.event.button == 0) {
@@ -25,12 +24,12 @@ tool = {
             }
             break;
           case 0x04: // MOUSEMOVE
-            console.log(this.isPainting);
             if (this.isPainting) {
               if (pointerInfo.pickInfo.hit) {
                 const ctx = this.canvas2D.getContext('2d');
                 const x = pointerInfo.pickInfo.getTextureCoordinates().x * this.size.width;
                 const y = (1 - pointerInfo.pickInfo.getTextureCoordinates().y) * this.size.height;
+                ctx.fillStyle = this.paintColor;
                 ctx.beginPath();
                 ctx.ellipse(x, y, 15, 15, 0, 0, Math.PI * 2);
                 ctx.fill();
