@@ -12,18 +12,18 @@ tool = {
       this.isPainting = false;
       this.pointerObservable = this.scene.onPointerObservable.add((pointerInfo) => {
         switch (pointerInfo.type) {
-          case 0x01:
+          case 0x01: // MOUSEDOWN
             if (pointerInfo.event.button == 0) {
               this.isPainting = true;
               this.paintColor = '#' + Math.floor(Math.random()*16777215).toString(16);
             }
             break;
-          case 0x02:
+          case 0x02: // MOUSEUP
             if (pointerInfo.event.button == 0) {
               this.isPainting = false;
             }
             break;
-          case 0x04:
+          case 0x04: // MOUSEMOVE
             if (this.isPainting) {
               if (pointerInfo.pickInfo.hit) {
                 const ctx = this.canvas2D.getContext('2d');
