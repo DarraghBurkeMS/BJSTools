@@ -18,7 +18,7 @@ tool = {
           const y = (1 - pointerInfo.pickInfo.getTextureCoordinates().y) * this.size.height;
           const pixel = ctx.getImageData(x, y, 1, 1).data;
           this.setMetadata({
-            color: "#" + ("000000" + this.rgbToHex(pixel[0], pixel[1], pixel[2])).slice(-6);
+            color: "#" + ("000000" + this.rgbToHex(pixel[0], pixel[1], pixel[2])).slice(-6),
             opacity: pixel[3]
           });
         }
