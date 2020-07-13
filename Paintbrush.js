@@ -31,7 +31,6 @@ tool = {
                 const x = pointerInfo.pickInfo.getTextureCoordinates().x * this.size.width;
                 const y = (1 - pointerInfo.pickInfo.getTextureCoordinates().y) * this.size.height;
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.resetTransform();
                 ctx.fillStyle = this.getMetadata().color;
                 ctx.globalAlpha = this.getMetadata().opacity;
                 ctx.beginPath();
