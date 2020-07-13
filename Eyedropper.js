@@ -1,5 +1,4 @@
-let tool;
-tool = {
+_TOOL_DATA_ = {
   name: "Eyedropper",
   type: class {
     constructor(parameters) {

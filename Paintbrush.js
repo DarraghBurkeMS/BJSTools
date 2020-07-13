@@ -1,5 +1,4 @@
-let tool;
-tool = {
+_TOOL_DATA_ = {
   name: "Paintbrush",
   type: class {
     constructor(parameters) {
