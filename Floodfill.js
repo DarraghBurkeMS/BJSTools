@@ -13,7 +13,7 @@ tool = {
           ctx.globalAlpha = this.parameters.getMetadata().opacity;
           ctx.globalCompositeOperation = 'source-over';
           ctx.fillRect(0,0, this.parameters.size.width, this.parameters.size.height);
-          this.updateTexture();
+          this.parameters.updateTexture();
         }
       });
     }
