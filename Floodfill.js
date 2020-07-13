@@ -16,6 +16,8 @@ tool = {
           const ctx = this.canvas2D.getContext('2d');
           ctx.fillStyle = this.getMetadata().color;
           ctx.globalAlpha = this.getMetadata().opacity;
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.resetTransform();
           ctx.fillRect(0,0, this.size.width, this.size.height);
           this.update();
         }
