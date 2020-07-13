@@ -2,29 +2,24 @@ let tool;
 tool = {
   name: "Floodfill",
   type: class {
-    constructor(scene, canvas2D, size, update, getMetadata, setMetadata) {
-      this.scene = scene;
-      this.canvas2D = canvas2D;
-      this.size = size;
-      this.update = update;
-      this.getMetadata = getMetadata;
-      this.setMetadata = setMetadata;
+    constructor(parameters) {
+      this.parameters = parameters;
     }
     setup () {
-      this.pointerObservable = this.scene.onPointerObservable.add((pointerInfo) => {
+      this.pointerObservable = this.parameters.scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.pickInfo.hit && pointerInfo.type == 0x01) {
-          const ctx = this.canvas2D.getContext('2d');
-          ctx.fillStyle = this.getMetadata().color;
-          ctx.globalAlpha = this.getMetadata().opacity;
+          const ctx = this.parameters.canvas2D.getContext('2d');
+          ctx.fillStyle = this.parameters.getMetadata().color;
+          ctx.globalAlpha = this.parameters.getMetadata().opacity;
           ctx.globalCompositeOperation = 'source-over';
-          ctx.fillRect(0,0, this.size.width, this.size.height);
-          this.update();
+          ctx.fillRect(0,0, this.parameters.size.width, this.parameters.size.height);
+          this.updateTexture();
         }
       });
     }
     cleanup () {
       if (this.pointerObservable) {
-        this.scene.onPointerObservable.remove(this.pointerObservable);
+        this.parameters.scene.onPointerObservable.remove(this.pointerObservable);
       }
     }
   }
