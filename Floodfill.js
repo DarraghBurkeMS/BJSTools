@@ -19,7 +19,7 @@ _TOOL_DATA_ = {
         setup () {
             this.pointerObservable = this.getParameters().scene.onPointerObservable.add((pointerInfo) => {
                 if (pointerInfo.pickInfo.hit) {
-                    if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+                    if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERDOWN) {
                         this.fill();
                     }
                 }
