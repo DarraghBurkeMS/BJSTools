@@ -1,4 +1,4 @@
-_TOOL_DATA = {
+_TOOL_DATA_ = {
   name: 'Paintbrush',
   type: class {
       constructor(getParameters) {
@@ -21,32 +21,32 @@ _TOOL_DATA = {
           updateTexture();
       }
       setup() {
-          const { scene, getMouseCoordinates, GUI, canvas2D } = this.getParameters();
-          // const radiusLabel = new BABYLON.GUI.TextBlock();
-          // radiusLabel.text = `Brush Width: ${this.radius}`;
-          // radiusLabel.color = 'white';
-          // radiusLabel.height = '20px';
-          // radiusLabel.style = GUI.style;
-          // GUI.toolWindow.addControl(radiusLabel);
-          // const radiusSlider = new BABYLON.GUI.Slider();
-          // radiusSlider.height = '20px';
-          // radiusSlider.value = this.radius;
-          // radiusSlider.minimum = 1;
-          // radiusSlider.maximum = 100;
-          // radiusSlider.step = 1;
-          // radiusSlider.isThumbCircle = true;
-          // radiusSlider.background = '#a3a3a3';
-          // radiusSlider.color = '#33648f';
-          // radiusSlider.borderColor = '#33648f';
-          // radiusSlider.onValueChangedObservable.add(value => {
-          //     this.radius = value;
-          //     this.GUI.radiusLabel.text = `Brush Width: ${this.radius}`;
-          // });
-          // GUI.toolWindow.addControl(radiusSlider);
-          // this.GUI = { radiusLabel, radiusSlider };
-          this.pointerObservable = scene.onPointerObservable.add((pointerInfo) => {
+          const { BABYLON, scene, getMouseCoordinates, GUI, canvas2D } = this.getParameters();
+          const radiusLabel = new BABYLON.GUI.TextBlock();
+          radiusLabel.text = `Brush Width: ${this.radius}`;
+          radiusLabel.color = 'white';
+          radiusLabel.height = '20px';
+          radiusLabel.style = GUI.style;
+          GUI.toolWindow.addControl(radiusLabel);
+          const radiusSlider = new BABYLON.GUI.Slider();
+          radiusSlider.height = '20px';
+          radiusSlider.value = this.radius;
+          radiusSlider.minimum = 1;
+          radiusSlider.maximum = 100;
+          radiusSlider.step = 1;
+          radiusSlider.isThumbCircle = true;
+          radiusSlider.background = '#a3a3a3';
+          radiusSlider.color = '#33648f';
+          radiusSlider.borderColor = '#33648f';
+          radiusSlider.onValueChangedObservable.add(value => {
+              this.radius = value;
+              this.GUI.radiusLabel.text = `Brush Width: ${this.radius}`;
+          });
+          GUI.toolWindow.addControl(radiusSlider);
+          this.GUI = { radiusLabel, radiusSlider };
+          this.pointerObservable = scene.onPointerObservable.add(pointerInfo => {
               if (pointerInfo.pickInfo.hit) {
-                  if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERDOWN) {
+                  if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                       if (pointerInfo.event.button == 0) {
                           this.isPainting = true;
                           const { x, y } = getMouseCoordinates(pointerInfo);
@@ -55,11 +55,11 @@ _TOOL_DATA = {
                           ctx.moveTo(x, y);
                       }
                   }
-                  if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERMOVE && this.isPainting) {
+                  if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE && this.isPainting) {
                       this.paint(pointerInfo);
                   }
               }
-              if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERUP) {
+              if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
                   if (pointerInfo.event.button == 0) {
                       this.isPainting = false;
                   }
@@ -68,7 +68,7 @@ _TOOL_DATA = {
           this.isPainting = false;
       }
       cleanup() {
-          // Object.entries(this.GUI).forEach(([key, value]) => value.dispose());
+          Object.entries(this.GUI).forEach(([key, value]) => value.dispose());
           this.isPainting = false;
           if (this.pointerObservable) {
               this.getParameters().scene.onPointerObservable.remove(this.pointerObservable);
