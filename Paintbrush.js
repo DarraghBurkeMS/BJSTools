@@ -4,6 +4,7 @@ _TOOL_DATA = {
       constructor(getParameters) {
           this.radius = 15;
           this.getParameters = getParameters;
+          this.GUI = {};
       }
       paint(pointerInfo) {
           const { canvas2D, getMouseCoordinates, metadata, updateTexture } = this.getParameters();
@@ -21,28 +22,28 @@ _TOOL_DATA = {
       }
       setup() {
           const { BABYLON, scene, getMouseCoordinates, GUI, canvas2D } = this.getParameters();
-          const radiusLabel = new BABYLON.GUI.TextBlock();
-          radiusLabel.text = `Brush Width: ${this.radius}`;
-          radiusLabel.color = 'white';
-          radiusLabel.height = '20px';
-          radiusLabel.style = GUI.style;
-          GUI.toolWindow.addControl(radiusLabel);
-          const radiusSlider = new BABYLON.GUI.Slider();
-          radiusSlider.height = '20px';
-          radiusSlider.value = this.radius;
-          radiusSlider.minimum = 1;
-          radiusSlider.maximum = 100;
-          radiusSlider.step = 1;
-          radiusSlider.isThumbCircle = true;
-          radiusSlider.background = '#a3a3a3';
-          radiusSlider.color = '#33648f';
-          radiusSlider.borderColor = '#33648f';
-          radiusSlider.onValueChangedObservable.add(value => {
-              this.radius = value;
-              this.GUI.radiusLabel.text = `Brush Width: ${this.radius}`;
-          });
-          GUI.toolWindow.addControl(radiusSlider);
-          this.GUI = { radiusLabel, radiusSlider };
+          // const radiusLabel = new BABYLON.GUI.TextBlock();
+          // radiusLabel.text = `Brush Width: ${this.radius}`;
+          // radiusLabel.color = 'white';
+          // radiusLabel.height = '20px';
+          // radiusLabel.style = GUI.style;
+          // GUI.toolWindow.addControl(radiusLabel);
+          // const radiusSlider = new BABYLON.GUI.Slider();
+          // radiusSlider.height = '20px';
+          // radiusSlider.value = this.radius;
+          // radiusSlider.minimum = 1;
+          // radiusSlider.maximum = 100;
+          // radiusSlider.step = 1;
+          // radiusSlider.isThumbCircle = true;
+          // radiusSlider.background = '#a3a3a3';
+          // radiusSlider.color = '#33648f';
+          // radiusSlider.borderColor = '#33648f';
+          // radiusSlider.onValueChangedObservable.add(value => {
+          //     this.radius = value;
+          //     this.GUI.radiusLabel.text = `Brush Width: ${this.radius}`;
+          // });
+          // GUI.toolWindow.addControl(radiusSlider);
+          // this.GUI = { radiusLabel, radiusSlider };
           this.pointerObservable = scene.onPointerObservable.add((pointerInfo) => {
               if (pointerInfo.pickInfo.hit) {
                   if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {

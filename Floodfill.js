@@ -1,7 +1,6 @@
 _TOOL_DATA_ = {
     name: 'Floodfill',
     type: class {
-
         constructor(getParameters) {
             this.getParameters = getParameters;
         }
