@@ -44,8 +44,7 @@ _TOOL_DATA = {
           GUI.toolWindow.addControl(radiusSlider);
           this.GUI = { radiusLabel, radiusSlider };
           this.pointerObservable = scene.onPointerObservable.add((pointerInfo) => {
-              var _a;
-              if ((_a = pointerInfo.pickInfo) === null || _a === void 0 ? void 0 : _a.hit) {
+              if (pointerInfo.pickInfo.hit) {
                   if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                       if (pointerInfo.event.button == 0) {
                           this.isPainting = true;
