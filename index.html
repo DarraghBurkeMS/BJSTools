@@ -5,7 +5,9 @@
   <h1>Creating Texture Inspector Tools</h1>
   <p>Creating a tool for the texture inspector is fairly straightforward. You will need to write a short .js file and then host it somewhere online; I have been using GH Pages for this purpose.</p>
   
-  <p>Here is a sample tool file: <a href="./Paintbrush.js">Paintbrush.js</a>. You can load this tool into the editor by clicking the "add tool" button, and then pasting in that URL and clicking add.</p>
+  <p>Here is a sample tool file: <a href="./Paintbrush.js">Paintbrush.js</a>. This is a paintbrush which uses the 2D canvas API. You can load this tool into the editor by clicking the "add tool" button, and then pasting in that URL and clicking add.</p>
+
+  <p>This is a sample 3D tool: <a href='./contrast.js'>contrast.js</a>. This is a contrast and exposure adjustment tool. It uses ImageProcessingConfiguration to modify the texture.</p>
 
   <p>The important things to note:
   <ol>
@@ -15,9 +17,10 @@
     <li>The class must have a constructor, which should save the function getParameters to a member variable. getParameters returns the tools API in the form of an object.</li>
     <li>The class must have a setup() function which is called <b>when the tool is selected in the toolbar</b>.</li>
     <li>The class must have a cleanup() function which is called <b>when the tool is deselected</b>.</li>
-    <li>You must call updateTexture() after you make any changes to the texture. (which is a member of getParameters())</li>
+    <li>You must call updateTexture() after you make any changes to the texture. (updateTexture is one of the fields returned by getParameters()). This pushes your changes back to the original scene.</li>
     <li>2D tools can use the canvas API to paint on the texture.</li>
-    <li>3D tools must create post processes or otherwise modify scene3D.</li>
+    <li>3D tools can create post processes or otherwise modify scene3D.</li>
+    <li>You may or may not want to implement onReset() in your tool. This function is called when the user uploads or resets the texture. For the contrast/exposure tool, I reset the sliders onReset.</li>
   </ol>
   </p>
 </body>
