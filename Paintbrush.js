@@ -4,7 +4,7 @@ _TOOL_DATA = {
       constructor(getParameters) {
           this.radius = 15;
           this.getParameters = getParameters;
-          this.GUI = {};
+          // this.GUI = {};
       }
       paint(pointerInfo) {
           const { canvas2D, getMouseCoordinates, metadata, updateTexture } = this.getParameters();
@@ -68,7 +68,7 @@ _TOOL_DATA = {
           this.isPainting = false;
       }
       cleanup() {
-          Object.entries(this.GUI).forEach(([key, value]) => value.dispose());
+          // Object.entries(this.GUI).forEach(([key, value]) => value.dispose());
           this.isPainting = false;
           if (this.pointerObservable) {
               this.getParameters().scene.onPointerObservable.remove(this.pointerObservable);
