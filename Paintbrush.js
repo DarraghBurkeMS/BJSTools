@@ -21,7 +21,7 @@ _TOOL_DATA = {
           updateTexture();
       }
       setup() {
-          const { BABYLON, scene, getMouseCoordinates, GUI, canvas2D } = this.getParameters();
+          const { scene, getMouseCoordinates, GUI, canvas2D } = this.getParameters();
           // const radiusLabel = new BABYLON.GUI.TextBlock();
           // radiusLabel.text = `Brush Width: ${this.radius}`;
           // radiusLabel.color = 'white';
@@ -46,7 +46,7 @@ _TOOL_DATA = {
           // this.GUI = { radiusLabel, radiusSlider };
           this.pointerObservable = scene.onPointerObservable.add((pointerInfo) => {
               if (pointerInfo.pickInfo.hit) {
-                  if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                  if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERDOWN) {
                       if (pointerInfo.event.button == 0) {
                           this.isPainting = true;
                           const { x, y } = getMouseCoordinates(pointerInfo);
@@ -55,11 +55,11 @@ _TOOL_DATA = {
                           ctx.moveTo(x, y);
                       }
                   }
-                  if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE && this.isPainting) {
+                  if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERMOVE && this.isPainting) {
                       this.paint(pointerInfo);
                   }
               }
-              if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
+              if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERUP) {
                   if (pointerInfo.event.button == 0) {
                       this.isPainting = false;
                   }
