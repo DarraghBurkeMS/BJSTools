@@ -4,7 +4,6 @@ _TOOL_DATA_ = {
       constructor(getParameters) {
           this.radius = 15;
           this.getParameters = getParameters;
-          // this.GUI = {};
       }
       paint(pointerInfo) {
           const { canvas2D, getMouseCoordinates, metadata, updateTexture } = this.getParameters();
