@@ -1,26 +1,188 @@
+<!DOCTYPE html>
+<html>
+
 <head>
-  <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome file</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
 </head>
-<body>
-  <h1>Creating Texture Inspector Tools</h1>
-  <p>Creating a tool for the texture inspector is fairly straightforward. You will need to write a short .js file and then host it somewhere online; I have been using GH Pages for this purpose.</p>
-  
-  <p>Here is a sample tool file: <a href="./Paintbrush.js">Paintbrush.js</a>. This is a paintbrush which uses the 2D canvas API. You can load this tool into the editor by clicking the "add tool" button, and then pasting in that URL and clicking add.</p>
 
-  <p>This is a sample 3D tool: <a href='./contrast.js'>contrast.js</a>. This is a contrast and exposure adjustment tool. It uses ImageProcessingConfiguration to modify the texture.</p>
-
-  <p>The important things to note:
-  <ol>
-    <li>the .js file must be structured as _TOOL_DATA_ = {...your tool data...}.</li>
-    <li>You must define a name (string), type (class), and icon (base 64 encoded SVG icon.</li>
-    <li>There are two optional properties. usesWindow if you want a GUI window and is3D if you want to use post processes.</li>
-    <li>The class must have a constructor, which should save the function getParameters to a member variable. getParameters returns the tools API in the form of an object.</li>
-    <li>The class must have a setup() function which is called <b>when the tool is selected in the toolbar</b>.</li>
-    <li>The class must have a cleanup() function which is called <b>when the tool is deselected</b>.</li>
-    <li>You must call updateTexture() after you make any changes to the texture. (updateTexture is one of the fields returned by getParameters()). This pushes your changes back to the original scene.</li>
-    <li>2D tools can use the canvas API to paint on the texture.</li>
-    <li>3D tools can create post processes or otherwise modify scene3D.</li>
-    <li>You may or may not want to implement onReset() in your tool. This function is called when the user uploads or resets the texture. For the contrast/exposure tool, I reset the sliders onReset.</li>
-  </ol>
-  </p>
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="creating-tools-for-the-texture-inspector">Creating tools for the texture inspector</h1>
+<p>Hi folks! My name is Darragh Burke and I’m an intern on the Babylon.js team for the Summer of 2020. While on the Babylon team, I’ve been building a texture inspector tool which lives inside the inspector. The texture inspector allows you to examine textures in detail and also make edits to your textures, while seeing updates in real time. This enables debugging textures within the engine.</p>
+<p>The most exciting thing about the texture inspector is that it’s highly extensible. If you can’t find a tool to make the edits you want to your texture, you can simply write your own using Javascript, and import it dynamically. This tutorial will walk you through that process.</p>
+<h2 id="invoking-the-inspector">Invoking the inspector</h2>
+<p>If you are in the playground, you can open the inspector from the button on the top bar. If your code is running outside the playground, you can just call the following line to invoke the inspector:</p>
+<pre class=" language-javascript"><code class="prism  language-javascript">scene<span class="token punctuation">.</span>debugLayer<span class="token punctuation">.</span><span class="token function">show</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre>
+<p>From here, you’ll want to open the textures pane in your scene. Click on a texture, and you should see a small preview of it in the bottom left of your screen. Hit the ‘Edit’ button to open the texture inspector.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>The top bar of the editor contains data about the pixel under the cursor, as well as buttons to resize the texture, upload a new texture, save your edits to your local machine, and reset the texture to it’s original state. On the left, there is a toolbar that allows you to switch between tools. You’ll notice that several tools are available by default. On the right, there is a panel that enables you to hide individual RGBA channels.</p>
+<h2 id="building-your-own-tools">Building your own tools</h2>
+<p>In order to write your own tools for the texture inspector, you will need a place to host .js files. This is because tools are always loaded from an external URL. One easy way to host .js files is to create a GitHub repository and enable GitHub Pages. This is a free service that will host the contents of your repository online.</p>
+<p>Once you’ve figured out how you want to host your .js files, we can begin writing our tool. This is the basic skeleton of a tool file.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token comment">/* your-tool-name.js */</span>
+_TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation">{</span>
+	name<span class="token punctuation">:</span>  <span class="token string">'Tool Name'</span><span class="token punctuation">,</span>
+	type<span class="token punctuation">:</span>  <span class="token keyword">class</span> <span class="token punctuation">{</span>
+		<span class="token function">constructor</span><span class="token punctuation">(</span>getParameters<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">this</span><span class="token punctuation">.</span>getParameters <span class="token operator">=</span> getParameters<span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+		<span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+		<span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+	<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	icon<span class="token punctuation">:</span>  <span class="token template-string"><span class="token string">`SVG File Encoded in Base64`</span></span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre>
+<p>The most important part here is to fill out a <code>name</code> for your tool, and to add an <code>icon</code>. Icons for the inspector should have square dimensions and be all white. Once you have a .svg icon file, you can simply encode it into base64 using a tool such as <a href="https://www.base64encode.org/">base64encode.org</a>.</p>
+<p>The <code>type</code> property is where you will write the actual code for your tool. This is a class which should implement an interface called IToolType:</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">interface</span>  <span class="token class-name">IToolType</span> <span class="token punctuation">{</span>
+	<span class="token comment">/** Called when the tool is selected. */</span>
+	setup<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
+	<span class="token comment">/** Called when the tool is deselected. */</span>
+	cleanup<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
+	<span class="token comment">/** Optional. Called when the user resets the texture or uploads a new texture. Tools may want to reset their state when this happens. */</span>
+	onReset<span class="token operator">?</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Many tools will want to add a pointer observable to the scene, allowing them to detect pointer events (such as mouse clicks or mouse moves). To do that, we’ll need to add a couple of lines to our <code>setup</code> and <code>cleanup</code> methods.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">class</span> <span class="token punctuation">{</span>
+	<span class="token function">constructor</span><span class="token punctuation">(</span>getParameters<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		<span class="token keyword">this</span><span class="token punctuation">.</span>getParameters <span class="token operator">=</span> getParameters<span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+	<span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		<span class="token comment">/* Use destructuring to get the value of scene from the tool API */</span>
+		<span class="token keyword">const</span> <span class="token punctuation">{</span>scene<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">/* Here we are adding a function, called an observer, which is called every time a pointer event happens */</span>
+		<span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver <span class="token operator">=</span> scene<span class="token punctuation">.</span>onPointerObservable<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>pointerInfo  <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+		    <span class="token comment">/* if pickInfo.hit is not null, the pointer is over the texture */</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>pickInfo<span class="token punctuation">.</span>hit<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+				<span class="token comment">/* do something here */</span>
+			<span class="token punctuation">}</span>
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+	<span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>scene<span class="token punctuation">.</span>onPointerObservable<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>This will allow us to track pointer events. However, at the moment we don’t actually do anything with the pointer events. Let’s add some behavior. A good place to start would be making left mouse button presses fill the entire texture with a single color.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token comment">/* all of these properties are provided to use by calling getParameters() */</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>scene<span class="token punctuation">,</span> BABYLON<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver <span class="token operator">=</span> scene<span class="token punctuation">.</span>onPointerObservable<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>pointerInfo  <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>pickInfo<span class="token punctuation">.</span>hit<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token comment">/* if it was a pointer down event - ie, a mouse click */</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>type <span class="token operator">===</span> BABYLON<span class="token punctuation">.</span>PointerEventTypes<span class="token punctuation">.</span>POINTERDOWN<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+				<span class="token comment">/* if we pressed the left mouse button */</span>
+				<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>button <span class="token operator">===</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+					<span class="token comment">/* we'll define our own function on the class to fill the texture */</span>
+					<span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">}</span>
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">/* here we use the canvas API to paint a white rectangle with 100% opacity onto the texture */</span>
+	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> <span class="token string">'white'</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> <span class="token number">1.0</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">/* we have to call updateTexture() after every change in order to push our edits back to the original scene */</span>
+	<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>If you add your tool now, clicking should fill the entire texture with a white rectangle. That’s something, but it’s not a very useful tool. We can make it dynamic by introducing metadata.</p>
+<h2 id="metadata">Metadata</h2>
+<p>Metadata is a set of data that is shared between all tools. This allows tools to communicate with each other, allowing for more complex behaviors. One example of this is the paint color. The paintbrush tool reads whatever color is in the metadata, and paints that color. The eyedropper does the opposite; it extracts a color from the texture, and stores it in the metadata.</p>
+<p>Tools which paint to the canvas should generally use the color value stored in the metadata; this is what users would expect. We can implement that for our own tool with just a couple of tweaks to our <code>fill</code> method.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">,</span> metadata<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> metadata<span class="token punctuation">.</span>color<span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> metadata<span class="token punctuation">.</span>opacity<span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>At this point, we have built a clone of the ‘Floodfill’ tool. Here is our full code:</p>
+<pre class=" language-javascript"><code class="prism  language-javascript">_TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation">{</span>
+	name<span class="token punctuation">:</span>  <span class="token string">'Floodfill'</span><span class="token punctuation">,</span>
+	type<span class="token punctuation">:</span>  <span class="token keyword">class</span> <span class="token punctuation">{</span>
+		<span class="token function">constructor</span><span class="token punctuation">(</span>getParameters<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">this</span><span class="token punctuation">.</span>getParameters <span class="token operator">=</span> getParameters<span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+		<span class="token function">setup</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">const</span> <span class="token punctuation">{</span>scene<span class="token punctuation">,</span> BABYLON<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver <span class="token operator">=</span> scene<span class="token punctuation">.</span>onPointerObservable<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token punctuation">(</span>pointerInfo<span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+				<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>pickInfo<span class="token punctuation">.</span>hit<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+					<span class="token keyword">if</span> <span class="token punctuation">(</span>pointerInfo<span class="token punctuation">.</span>type <span class="token operator">===</span> BABYLON<span class="token punctuation">.</span>PointerEventTypes<span class="token punctuation">.</span>POINTERDOWN<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+						<span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+					<span class="token punctuation">}</span>
+				<span class="token punctuation">}</span>
+			<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+		<span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> metadata<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> metadata<span class="token punctuation">.</span>color<span class="token punctuation">;</span>
+			ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> metadata<span class="token punctuation">.</span>opacity<span class="token punctuation">;</span>
+			ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
+			ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+		<span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+			<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+				<span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>scene<span class="token punctuation">.</span>onPointerObservable<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token punctuation">}</span>
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span><span class="token punctuation">,</span>
+	icon<span class="token punctuation">:</span> <span class="token template-string"><span class="token string">`PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHN0eWxlPSJmaWxsOm5vbmUiLz48cGF0aCBkPSJNMjAsMTAuNWEu
+	NzUuNzUsMCwwLDAtMS41LDB2MS4yNWEyLjE0LDIuMTQsMCwwLDAtLjg0LjUzbC02Ljg4LDYuODhhMi4yNSwyLjI1LDAsMCwwLDAsMy4xOGw0Ljg4LDQuODhhMi4yNSwyLjI1LDAsMCwwLDMuMTgsMGw2Ljg4LTYuODhhMi4yNSwyLjI1LDAsMCwwLDAtMy4xOGwtNC44
+	OC00Ljg4YTIuMjksMi4yOSwwLDAsMC0uODQtLjUzWm0tOC4xNiw5LjcyLDYuNjYtNi42NlYxNUEuNzUuNzUsMCwwLDAsMjAsMTVWMTMuNTZsNC42Niw0LjY2YS43NS43NSwwLDAsMSwwLDEuMDZsLTEsMUgxMS44Wm0uNDcsMS41M2g5Ljg4bC00LjQxLDQuNDFhLjc1
+	Ljc1LDAsMCwxLTEuMDYsMFoiIHN0eWxlPSJmaWxsOiNmZmYiLz48cGF0aCBkPSJNMjcuNTEsMjEuODVhLjg4Ljg4LDAsMCwwLTEuNTQsMGwtMiwzLjc3YTMuMTUsMy4xNSwwLDEsMCw1LjU2LDBabS0yLjIzLDQuNDcsMS40Ni0yLjczLDEuNDUsMi43M2ExLjY1LDEu
+	NjUsMCwxLDEtMi45MSwwWiIgc3R5bGU9ImZpbGw6I2ZmZiIvPjwvc3ZnPg==`</span></span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre>
+<p>This is a totally functional tool, but there’s a lot more we can do with the tool API. Read on to learn how to use the GUI and postprocesses.</p>
+<h2 id="gui">GUI</h2>
+<p>…todo…<br>
+Here is an example of a tool which uses the GUI: <a href="./paintbrush.js">paintbrush.js</a></p>
+<h2 id="postprocesses">Postprocesses</h2>
+<p>…todo…<br>
+Here is an example of a tool which uses postprocesses: <a href="./contrast.js">contrast.js</a></p>
+<h2 id="api-reference">API Reference</h2>
+<p>Here is the full tool parameters interface.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">interface</span>  <span class="token class-name">IToolParameters</span> <span class="token punctuation">{</span>
+	<span class="token comment">/** The visible scene in the editor. Useful for adding pointer and keyboard events. */</span>
+	scene<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
+	<span class="token comment">/** The 2D canvas which tools can paint on using the canvas API. */</span>
+	canvas2D<span class="token punctuation">:</span> HTMLCanvasElement<span class="token punctuation">;</span>
+	<span class="token comment">/** The 3D scene which tools can add post processes to. */</span>
+	scene3D<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
+	<span class="token comment">/** The size of the texture. */</span>
+	size<span class="token punctuation">:</span> ISize<span class="token punctuation">;</span>
+	<span class="token comment">/** Pushes the editor texture back to the original scene. This should be called every time a tool makes any modification to a texture. */</span>
+	updateTexture<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
+	<span class="token comment">/** The metadata object which is shared between all tools. Feel free to store any information here. Do not set this directly: instead call setMetadata. */</span>
+	metadata<span class="token punctuation">:</span> any<span class="token punctuation">;</span>
+	<span class="token comment">/** Call this when you want to mutate the metadata. */</span>
+	setMetadata<span class="token punctuation">:</span> <span class="token punctuation">(</span>data <span class="token punctuation">:</span> any<span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
+	<span class="token comment">/** Returns the texture coordinates under the cursor */</span>
+	getMouseCoordinates<span class="token punctuation">:</span> <span class="token punctuation">(</span>pointerInfo <span class="token punctuation">:</span> PointerInfo<span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  Vector2<span class="token punctuation">;</span>
+	<span class="token comment">/** An object which holds the GUI's ADT as well as the tool window. */</span>
+	GUI<span class="token punctuation">:</span> IToolGUI<span class="token punctuation">;</span>
+	<span class="token comment">/** Provides access to the BABYLON namespace */</span>
+	BABYLON<span class="token punctuation">:</span> any<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+</div>
 </body>
+
+</html>

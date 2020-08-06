@@ -4,29 +4,28 @@ _TOOL_DATA_ = {
         constructor(getParameters) {
             this.getParameters = getParameters;
         }
-
-        fill() {
-            const p = this.getParameters();
-            const ctx = p.canvas2D.getContext('2d');
-            ctx.fillStyle = p.metadata.color;
-            ctx.globalAlpha = p.metadata.opacity;
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillRect(0,0, p.size.width, p.size.height);
-            p.updateTexture();
-        }
-        
         setup () {
-            this.pointerObservable = this.getParameters().scene.onPointerObservable.add((pointerInfo) => {
+            const {scene, BABYLON} = this.getParameters();
+            this.pointerObserver = scene.onPointerObservable.add((pointerInfo) => {
                 if (pointerInfo.pickInfo.hit) {
-                    if (pointerInfo.type === this.getParameters().BABYLON.PointerEventTypes.POINTERDOWN) {
+                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
                         this.fill();
                     }
                 }
             });
         }
-        cleanup () {
-            if (this.pointerObservable) {
-                this.getParameters().scene.onPointerObservable.remove(this.pointerObservable);
+        fill() {
+            const {canvas2D, metadata, updateTexture, size} = this.getParameters();
+            const ctx = canvas2D.getContext('2d');
+            ctx.fillStyle = metadata.color;
+            ctx.globalAlpha = metadata.opacity;
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillRect(0,0, size.width, size.height);
+            updateTexture();
+        }
+        cleanup() {
+            if (this.pointerObserver) {
+                this.getParameters().scene.onPointerObservable.remove(this.pointerObserver);
             }
         }
     },
