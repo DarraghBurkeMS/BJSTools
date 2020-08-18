@@ -47,12 +47,12 @@ _TOOL_DATA_ = {
         }
         setup() {
             const { scene, GUI, BABYLON } = this.getParameters();
-            const widthLabel = new TextBlock();
+            const widthLabel = new BABYLON.TextBlock();
             widthLabel.color = 'white';
             widthLabel.heightInPixels = 20;
             widthLabel.style = GUI.style;
             GUI.toolWindow.addControl(widthLabel);
-            const widthSlider = new Slider();
+            const widthSlider = new BABYLON.Slider();
             widthSlider.heightInPixels = 20;
             widthSlider.value = this.width;
             widthSlider.minimum = 1;
