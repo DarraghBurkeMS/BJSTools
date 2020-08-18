@@ -152,11 +152,38 @@ _TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation
 </code></pre>
 <p>This is a totally functional tool, but there’s a lot more we can do with the tool API. Read on to learn how to use the GUI and postprocesses.</p>
 <h2 id="gui">GUI</h2>
-<p>…todo…<br>
-Here is an example of a tool which uses the GUI: <a href="./paintbrush.js">paintbrush.js</a></p>
+<p>Tool GUIs can be implemented using <a href="https://doc.babylonjs.com/how_to/gui">Babylon GUI</a>. The editor provides a draggable window which tools can attach controls to. First, you should set the <code>usesWindow</code> property of <code>_TOOL_DATA_</code> to true. Next you will need to register your GUI controls in your setup() function.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token comment">/* GUI is an object provided by the tools API which gives us access to the tool window as well as a style object */</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span> BABYLON<span class="token punctuation">,</span> GUI <span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">/* Babylon GUI provides many types of controls, such as sliders and buttons */</span>
+	<span class="token keyword">const</span> label <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BABYLON<span class="token punctuation">.</span>GUI<span class="token punctuation">.</span>TextBlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	label<span class="token punctuation">.</span>text <span class="token operator">=</span> <span class="token string">'Hello World'</span><span class="token punctuation">;</span>
+	label<span class="token punctuation">.</span>color <span class="token operator">=</span> <span class="token string">'white'</span><span class="token punctuation">;</span>
+	label<span class="token punctuation">.</span>height <span class="token operator">=</span> 	<span class="token string">'20px'</span><span class="token punctuation">;</span>
+	<span class="token comment">/* Provides a default font family and size */</span>
+	label<span class="token punctuation">.</span>style <span class="token operator">=</span> GUI<span class="token punctuation">.</span>style<span class="token punctuation">;</span>
+	GUI<span class="token punctuation">.</span>toolWindow<span class="token punctuation">.</span><span class="token function">attachControl</span><span class="token punctuation">(</span>label<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">this</span><span class="token punctuation">.</span>label <span class="token operator">=</span> label<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Finally, it is crucial to remove the controls when we deselect the tool. In our cleanup function, we can add this.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">this</span><span class="token punctuation">.</span>label<span class="token punctuation">.</span><span class="token function">dispose</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Here is an example of a tool which uses the GUI: <a href="./paintbrush.js">paintbrush.js</a></p>
 <h2 id="postprocesses">Postprocesses</h2>
-<p>…todo…<br>
-Here is an example of a tool which uses postprocesses: <a href="./contrast.js">contrast.js</a></p>
+<p>Babylon.js provides many useful effects out of the box called <a href="https://doc.babylonjs.com/how_to/how_to_use_postprocesses">post processes</a>. They can be used to apply filters to textures. In order to use them, we must identify our tool as a 3D tool (as opposed to a 2D tool). This means we can no longer access the canvas, but instead want to apply operations to the <code>scene3d</code> object.</p>
+<p>First, let’s mark <code>is3D</code> in our <code>_TOOL_DATA_</code> object as true. Then, let’s rewrite our setup() function from scratch.</p>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>scene3D<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	scene3D<span class="token punctuation">.</span>imageProcessingConfiguration<span class="token punctuation">.</span>isEnabled <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+	scene3D<span class="token punctuation">.</span>imageProcessingConfiguration<span class="token punctuation">.</span>contrast <span class="token operator">=</span> <span class="token number">0.5</span><span class="token punctuation">;</span>
+	scene3D<span class="token punctuation">.</span>imageProcessingConfiguration<span class="token punctuation">.</span>exposure <span class="token operator">=</span> <span class="token number">1.5</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Here is an example of a tool which uses postprocesses: <a href="./contrast.t=js">contrast.js</a></p>
 <h2 id="api-reference">API Reference</h2>
 <p>Here is the full tool parameters interface.</p>
 <pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">interface</span>  <span class="token class-name">IToolParameters</span> <span class="token punctuation">{</span>

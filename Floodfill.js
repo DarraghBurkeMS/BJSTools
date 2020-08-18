@@ -7,21 +7,22 @@ _TOOL_DATA_ = {
         setup () {
             const {scene, BABYLON} = this.getParameters();
             this.pointerObserver = scene.onPointerObservable.add((pointerInfo) => {
-                if (pointerInfo.pickInfo.hit) {
-                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                if (pointerInfo.pickInfo && pointerInfo.pickInfo.hit) {
+                    if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN && pointerInfo.event.button == 0) {
                         this.fill();
                     }
                 }
             });
         }
         fill() {
-            const {canvas2D, metadata, updateTexture, size} = this.getParameters();
-            const ctx = canvas2D.getContext('2d');
+            const {startPainting, updatePainting, stopPainting, metadata} = this.getParameters();
+            const ctx = startPainting();
             ctx.fillStyle = metadata.color;
             ctx.globalAlpha = metadata.opacity;
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillRect(0,0, size.width, size.height);
-            updateTexture();
+            ctx.globalCompositeOperation = 'copy';
+            ctx.fillRect(0,0, ctx.canvas.width, ctx.canvas.height);
+            updatePainting();
+            stopPainting();
         }
         cleanup() {
             if (this.pointerObserver) {
