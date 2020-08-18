@@ -70,6 +70,7 @@ _TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation
 <span class="token punctuation">}</span>
 </code></pre>
 <p>This will allow us to track pointer events. However, at the moment we don’t actually do anything with the pointer events. Let’s add some behavior. A good place to start would be making left mouse button presses fill the entire texture with a single color.</p>
+<p>There are three <code>painting</code> methods which allow us to modify the texture using the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API">Canvas API</a>. We can call <code>startPainting()</code> to get access to a 2D Canvas Context, <code>updatePainting()</code> to push any changes we make to the GPU, and <code>stopPainting()</code> when our tool is finished editing. For a floodfill tool, we will be calling all three functions in the same method; for a paintbrush tool we would only want to call <code>stopPainting()</code> when the user has released the mouse button.</p>
 <pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
 	<span class="token comment">/* all of these properties are provided to use by calling getParameters() */</span>
 	<span class="token keyword">const</span> <span class="token punctuation">{</span>scene<span class="token punctuation">,</span> BABYLON<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -86,29 +87,32 @@ _TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation
 	<span class="token punctuation">}</span>
 <span class="token punctuation">}</span>
 <span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-	<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>startPainting<span class="token punctuation">,</span> updatePainting<span class="token punctuation">,</span> stopPainting<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 	<span class="token comment">/* here we use the canvas API to paint a white rectangle with 100% opacity onto the texture */</span>
-	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> <span class="token function">startPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 	ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> <span class="token string">'white'</span><span class="token punctuation">;</span>
 	ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> <span class="token number">1.0</span><span class="token punctuation">;</span>
-	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
-	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
-	<span class="token comment">/* we have to call updateTexture() after every change in order to push our edits back to the original scene */</span>
-	<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'copy'</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>width<span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">/* we have to call updatePainting() after every change in order to push our modifications on to the GPU */</span>
+	<span class="token function">updatePainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">stopPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
-<p>If you add your tool now, clicking should fill the entire texture with a white rectangle. That’s something, but it’s not a very useful tool. We can make it dynamic by introducing metadata.</p>
+<p>If you add your tool now, clicking should fill the entire texture (or selected area) with a white rectangle. That’s something, but it’s not a very useful tool. We can make it dynamic by introducing metadata.</p>
 <h2 id="metadata">Metadata</h2>
 <p>Metadata is a set of data that is shared between all tools. This allows tools to communicate with each other, allowing for more complex behaviors. One example of this is the paint color. The paintbrush tool reads whatever color is in the metadata, and paints that color. The eyedropper does the opposite; it extracts a color from the texture, and stores it in the metadata.</p>
 <p>Tools which paint to the canvas should generally use the color value stored in the metadata; this is what users would expect. We can implement that for our own tool with just a couple of tweaks to our <code>fill</code> method.</p>
 <pre class=" language-javascript"><code class="prism  language-javascript"><span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-	<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">,</span> metadata<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">const</span> <span class="token punctuation">{</span>startPainting<span class="token punctuation">,</span> updatePainting<span class="token punctuation">,</span> stopPainting<span class="token punctuation">,</span> metadata<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">const</span>  ctx <span class="token operator">=</span> <span class="token function">startPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 	ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> metadata<span class="token punctuation">.</span>color<span class="token punctuation">;</span>
 	ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> metadata<span class="token punctuation">.</span>opacity<span class="token punctuation">;</span>
-	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
-	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
-	<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">/* We use copy here because we don't want any blending; we are just filling the exact RGBA value held by the metadata. */</span>
+	ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'copy'</span><span class="token punctuation">;</span>
+	ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>width<span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">updatePainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">stopPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
 <p>At this point, we have built a clone of the ‘Floodfill’ tool. Here is our full code:</p>
@@ -129,13 +133,15 @@ _TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation
 			<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 		<span class="token punctuation">}</span>
 		<span class="token function">fill</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-			<span class="token keyword">const</span> <span class="token punctuation">{</span>canvas2D<span class="token punctuation">,</span> metadata<span class="token punctuation">,</span> updateTexture<span class="token punctuation">,</span> size<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-			<span class="token keyword">const</span>  ctx <span class="token operator">=</span> canvas2D<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">const</span> <span class="token punctuation">{</span>startPainting<span class="token punctuation">,</span> updatePainting<span class="token punctuation">,</span> stopPainting<span class="token punctuation">,</span> metadata<span class="token punctuation">}</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">getParameters</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">const</span>  ctx <span class="token operator">=</span> <span class="token function">startPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 			ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> metadata<span class="token punctuation">.</span>color<span class="token punctuation">;</span>
 			ctx<span class="token punctuation">.</span>globalAlpha <span class="token operator">=</span> metadata<span class="token punctuation">.</span>opacity<span class="token punctuation">;</span>
-			ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'source-over'</span><span class="token punctuation">;</span>
-			ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> size<span class="token punctuation">.</span>width<span class="token punctuation">,</span> size<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
-			<span class="token function">updateTexture</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token comment">/* We use copy here because we don't want any blending; we are just filling the exact RGBA value held by the metadata. */</span>
+			ctx<span class="token punctuation">.</span>globalCompositeOperation <span class="token operator">=</span> <span class="token string">'copy'</span><span class="token punctuation">;</span>
+			ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>width<span class="token punctuation">,</span> ctx<span class="token punctuation">.</span>canvas<span class="token punctuation">.</span>height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">updatePainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token function">stopPainting</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 		<span class="token punctuation">}</span>
 		<span class="token function">cleanup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
 			<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>pointerObserver<span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -186,28 +192,34 @@ _TOOL_DATA_ <span class="token operator">=</span> <span class="token punctuation
 <p>Here is an example of a tool which uses postprocesses: <a href="./contrast.t=js">contrast.js</a></p>
 <h2 id="api-reference">API Reference</h2>
 <p>Here is the full tool parameters interface.</p>
-<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">interface</span>  <span class="token class-name">IToolParameters</span> <span class="token punctuation">{</span>
-	<span class="token comment">/** The visible scene in the editor. Useful for adding pointer and keyboard events. */</span>
-	scene<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
-	<span class="token comment">/** The 2D canvas which tools can paint on using the canvas API. */</span>
-	canvas2D<span class="token punctuation">:</span> HTMLCanvasElement<span class="token punctuation">;</span>
-	<span class="token comment">/** The 3D scene which tools can add post processes to. */</span>
-	scene3D<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
-	<span class="token comment">/** The size of the texture. */</span>
-	size<span class="token punctuation">:</span> ISize<span class="token punctuation">;</span>
-	<span class="token comment">/** Pushes the editor texture back to the original scene. This should be called every time a tool makes any modification to a texture. */</span>
-	updateTexture<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
-	<span class="token comment">/** The metadata object which is shared between all tools. Feel free to store any information here. Do not set this directly: instead call setMetadata. */</span>
-	metadata<span class="token punctuation">:</span> any<span class="token punctuation">;</span>
-	<span class="token comment">/** Call this when you want to mutate the metadata. */</span>
-	setMetadata<span class="token punctuation">:</span> <span class="token punctuation">(</span>data <span class="token punctuation">:</span> any<span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  <span class="token keyword">void</span><span class="token punctuation">;</span>
-	<span class="token comment">/** Returns the texture coordinates under the cursor */</span>
-	getMouseCoordinates<span class="token punctuation">:</span> <span class="token punctuation">(</span>pointerInfo <span class="token punctuation">:</span> PointerInfo<span class="token punctuation">)</span> <span class="token operator">=&gt;</span>  Vector2<span class="token punctuation">;</span>
-	<span class="token comment">/** An object which holds the GUI's ADT as well as the tool window. */</span>
-	GUI<span class="token punctuation">:</span> IToolGUI<span class="token punctuation">;</span>
-	<span class="token comment">/** Provides access to the BABYLON namespace */</span>
-	BABYLON<span class="token punctuation">:</span> any<span class="token punctuation">;</span>
-<span class="token punctuation">}</span>
+<pre class=" language-javascript"><code class="prism  language-javascript"><span class="token keyword">export</span> <span class="token keyword">interface</span> <span class="token class-name">IToolParameters</span> <span class="token punctuation">{</span>
+    <span class="token comment">/** The visible scene in the editor. Useful for adding pointer and keyboard events. */</span>
+    scene<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
+    <span class="token comment">/** The 2D canvas which you can sample pixel data from. Tools should not paint directly on this canvas. */</span>
+    canvas2D<span class="token punctuation">:</span> HTMLCanvasElement<span class="token punctuation">;</span>
+    <span class="token comment">/** The 3D scene which tools can add post processes to. */</span>
+    scene3D<span class="token punctuation">:</span> Scene<span class="token punctuation">;</span>
+    <span class="token comment">/** The size of the texture. */</span>
+    size<span class="token punctuation">:</span> ISize<span class="token punctuation">;</span>
+    <span class="token comment">/** Pushes the editor texture back to the original scene. This should be called every time a tool makes any modification to a texture. */</span>
+    updateTexture<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token keyword">void</span><span class="token punctuation">;</span>
+    <span class="token comment">/** The metadata object which is shared between all tools. Feel free to store any information here. Do not set this directly: instead call setMetadata. */</span>
+    metadata<span class="token punctuation">:</span> IMetadata<span class="token punctuation">;</span>
+    <span class="token comment">/** Call this when you want to mutate the metadata. */</span>
+    setMetadata<span class="token punctuation">:</span> <span class="token punctuation">(</span>data <span class="token punctuation">:</span> any<span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token keyword">void</span><span class="token punctuation">;</span>
+    <span class="token comment">/** Returns the texture coordinates under the cursor */</span>
+    getMouseCoordinates<span class="token punctuation">:</span> <span class="token punctuation">(</span>pointerInfo <span class="token punctuation">:</span> PointerInfo<span class="token punctuation">)</span> <span class="token operator">=&gt;</span> Vector2<span class="token punctuation">;</span>
+    <span class="token comment">/** An object which holds the GUI's ADT as well as the tool window. */</span>
+    GUI<span class="token punctuation">:</span> IToolGUI<span class="token punctuation">;</span>
+    <span class="token comment">/** Provides access to the BABYLON namespace */</span>
+    BABYLON<span class="token punctuation">:</span> any<span class="token punctuation">;</span>
+    <span class="token comment">/** Provides a canvas that you can use the canvas API to paint on. */</span>
+    startPainting<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> CanvasRenderingContext2D<span class="token punctuation">;</span>
+    <span class="token comment">/** After you have painted on your canvas, call this method to push the updates back to the texture. */</span>
+    updatePainting<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token keyword">void</span><span class="token punctuation">;</span>
+    <span class="token comment">/** Call this when you are finished painting. */</span>
+    stopPainting<span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token keyword">void</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token template-string"><span class="token string">``</span></span>`
 </code></pre>
 </div>
 </body>
